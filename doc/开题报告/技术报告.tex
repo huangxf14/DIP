@@ -40,6 +40,18 @@
 
 	\subsection{手掌轮廓检测}
 
+		\begin{enumerate}
+			\item 基于图像灰度梯度对图像进行分割
+			\item 根据颜色判断分割出的区域是否是人体
+			\item 根据区域的形状特征判断该部分是否为手掌
+				\begin{enumerate}
+				  \item 对区域进行预处理，使得区域轮廓基本光滑
+					\item 取区域的重心为原点，计算轮廓到重心的距离
+					\item 判断该距离是否符合手掌特征
+				\end{enumerate}
+			\item 根据轮廓特征对手掌进行初步的对准
+		\end{enumerate}
+
 	\subsection{手掌关键点提取}
 	
 		利用老师提供的关键点提取程序进行提取。
