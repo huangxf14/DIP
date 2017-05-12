@@ -51,9 +51,79 @@ void Frame::CheckPalm() {
   morphologyEx(mask, mask, MORPH_OPEN, element);
   morphologyEx(mask, mask, MORPH_CLOSE, element);
 
+  vector<vector<Point2i>> contours;
+  findContours(mask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+  int max_ind = 0;
+  for (int i = 0; i != contours.size(); ++i) {
+    if (contours[i].size() > contours[max_ind].size()) {
+      max_ind = i;
+    }
+  }
+
   Mat disp;
   img_.copyTo(disp, mask);
+  drawContours(disp, contours, max_ind, Scalar(255, 0, 0));
+
   imshow("flood", disp);
+
+
+  // Calc keypoints
+  // TODO !!
+  Point2i root = init_keypoints_->at(0);
+
+  vector<Point2i> contour = contours[max_ind];
+  vector<double> distance;
+  for (int i = 0; i != contour.size(); ++i) {
+    Point2i p = contour[i];
+
+    distance.push_back(norm(p - root));
+  }
+
+  vector<int> peaks;
+  vector<int> valleys;
+  int n = 5;  // 周围 n 个点单调升降则判定为峰/谷值
+
+  if (contour.size() < 2 * n + 1) {
+    return;
+  }
+  for (int i = n; i != contour.size() - n; ++i) {
+    if (contour[i].y < root.y) {
+      bool is_peak = true;
+      for (int j = 1; j != n; ++j) {
+        if (distance[i - j] >= distance[i - j + 1] || distance[i + j] >= distance[i + j - 1]) {
+          is_peak = false;
+          break;
+        }
+      }
+      if (is_peak) {
+        peaks.push_back(i);
+      }
+
+      bool is_valley = true;
+      for (int j = 1; j != n; ++j) {
+        if (distance[i - j] <= distance[i - j + 1] || distance[i + j] <= distance[i + j - 1]) {
+          is_valley = false;
+          break;
+        }
+      }
+      if (is_valley) {
+        valleys.push_back(i);
+      }
+    }
+  }
+
+  // Draw peak valley
+  if (!peaks.empty() && !valleys.empty()) {
+    for (int i = 0; i != peaks.size(); ++i) {
+      circle(disp, contour[peaks[i]], 2, Scalar(0, 0, 255), 2);
+    }
+    for (int i = 0; i != valleys.size(); ++i) {
+      circle(disp, contour[valleys[i]], 2, Scalar(0, 255, 0), 2);
+    }
+  }
+  imshow("keypoints", disp);
+
 }
 
 //void Frame::Segment() {

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <cmath>
 #include <cstdlib>
 
 #include <opencv2\opencv.hpp>
@@ -44,7 +45,6 @@ public:
 
   shared_ptr<vector<Point2i>> init_keypoints_;
   shared_ptr<vector<Point2i>> keypoints_;
-  vector<Mat> fingers_;
   Mat affine_mat_;
 };
 
