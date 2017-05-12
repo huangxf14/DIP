@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -13,28 +14,54 @@
 using namespace std;
 using namespace cv;
 
+
+
 #define INFO(msg) {cerr << "[INFO] " << (msg) << endl;}
 #define WARNING(msg) {cerr << "[WARNING] " << (msg) << endl;}
 #define ERROR(msg) {cerr << "[ERROR] " << (msg) << endl; exit(-1);}
 #define ASSERT(flag, msg) {if (!(flag)) ERROR(msg) }
 
-void Segmentation(const Mat &src, Mat &dst,  Mat &boundary);
-void Alignment(const Mat &src, Mat &dst, const Mat &boundary, Mat &keypoints, Mat &affine_mat);
+class Frame {
+public:
+  Frame(const Mat &src, shared_ptr<vector<Point2i>> kpts);
+  ~Frame() {};
+
+  void CheckPalm();
+  //void Segment();
+  //void GetKeypoints();
+  void AffineTrans();
+
+  void Display(bool is_living_);
+  void KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask);
+  void DrawKeypoints(const Mat &src, Mat &dst);
+
+  double finger_thickness_;
+
+  Mat img_;
+  Mat palm_mask_;
+  Mat palm_;  // after alignment
+  bool is_palm_;
+
+  shared_ptr<vector<Point2i>> init_keypoints_;
+  shared_ptr<vector<Point2i>> keypoints_;
+  vector<Mat> fingers_;
+  Mat affine_mat_;
+};
 
 class LivenessDetector {
 public:
-  LivenessDetector() : is_living_(false) {}
-
-  void PushFrame(const Mat &frame);
-  bool IsLiving() { return is_living_; }
+  LivenessDetector(int device_id) { vc_.open(device_id); }
+  ~LivenessDetector() { vc_.release(); }
+  
+  void Detect();
 
 private:
   void CheckLiveness();
 
-  vector<Mat> frames_;
+  VideoCapture vc_;
+  vector<Frame> frames_;
+  Mat display_;
   bool is_living_;
 };
-
-void DisplayResult(const Mat &img, const Mat &boundary, const Mat &keypoints, const Mat &affine_mat, bool is_living);
 
 #endif
