@@ -66,6 +66,6 @@ private:
   int match_stage_;
 };
 
-vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2);
+vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2, int value = 20);
 
 #endif

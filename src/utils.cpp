@@ -7,7 +7,7 @@ bool cmp(Point3i &x,Point3i &y)
 	return x.x<y.x;
 };
 
-vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,int value=50)
+vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,int value)
 {
 	vector<Point2i> ans;
 	vector<Point3i> graph;
@@ -37,3 +37,4 @@ vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,int value=
 	};
 	return ans;
 };
+
