@@ -160,16 +160,28 @@ void Frame::AffineTrans() {
   // TODO
 }
 
-void Frame::Display(bool is_living) {
+void Frame::Display(bool is_living, int match_stage) {
   // TODO
   Mat display;
   DrawKeypoints(img_, display);
 
-  if (is_living) {
-    imshow("display", display);
-  } else { // not living
-    imshow("display", display);
+  if (is_palm_) {
+    putText(display, "Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
+  } else {
+    putText(display, "Can't Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
   }
+
+  if (is_living) {
+    putText(display, "Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
+  } else {
+    putText(display, "Not Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
+  }
+
+  if (!is_palm_) {
+    putText(display, "Place your hand ???", Point2i(20, 90), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
+  }
+
+  imshow("display", display);
 }
 
 void Frame::KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask) {

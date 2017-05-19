@@ -33,7 +33,7 @@ public:
   //void GetKeypoints();
   void AffineTrans();
 
-  void Display(bool is_living_);
+  void Display(bool is_living_, int match_stage);
   void KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask);
   void DrawKeypoints(const Mat &src, Mat &dst);
 
@@ -63,6 +63,7 @@ private:
   deque<Frame> frames_;
   Mat display_;
   bool is_living_;
+  int match_stage_;
 };
 
 vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2);
