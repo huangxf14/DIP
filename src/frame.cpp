@@ -21,7 +21,7 @@ Frame::Frame(const Mat &src, shared_ptr<vector<Point2i>> kpts) {
 void Frame::CheckPalm() {
   // TODO
   this->is_palm_ = false;
-  /*
+  
   Point2i center = (init_keypoints_->at(0) + init_keypoints_->at(3) + init_keypoints_->at(9));
   center.x = center.x / 3;
   center.y = center.y / 3;
@@ -36,9 +36,10 @@ void Frame::CheckPalm() {
   // GaussianBlur(tmp, tmp, Size(blur_range, blur_range), blur_sigma);
 
   // flood fill
+  // 696 764 908
   Scalar filling_color(255, 255, 255);
-  Scalar ld(30, 30, 30);
-  Scalar ud(30, 30, 30);
+  Scalar ld(60, 60, 80);
+  Scalar ud(60, 60, 80);
   floodFill(tmp, center, filling_color, NULL, ld , ud, 4 | FLOODFILL_FIXED_RANGE);
 
   Mat mask;
@@ -128,11 +129,31 @@ void Frame::CheckPalm() {
         FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
     }
   }
-  imshow("keypoints", disp);
+
 
   // Match keypoints
   vector<int> keypoints_match(11, -1);
-  */
+
+  vector<Point2i> keypoints_init;
+  vector<Point2i> keypoints_detect;
+  for (int i = 0; i != peaks.size(); ++i) {
+    keypoints_detect.push_back(contour[peaks[i]]);
+  }
+  for (int i = 0; i != valleys.size(); ++i) {
+    keypoints_detect.push_back(contour[valleys[i]]);
+  }
+  for (int i = 0; i != init_keypoints_->size(); ++i) {
+    keypoints_init.push_back(init_keypoints_->at(i));
+  }
+
+  vector<Point2i> match = Match(keypoints_init, keypoints_detect);
+
+  INFO("DRAW KEYPOINTS")
+  for (int i = 0; i != match.size(); ++i) {
+    line(disp, keypoints_init[match[i].x], keypoints_detect[match[i].y], Scalar(0, 255, 0), 2);
+  }
+  imshow("keypoints", disp);
+  INFO("FINISH")
 }
 
 void Frame::AffineTrans() {
