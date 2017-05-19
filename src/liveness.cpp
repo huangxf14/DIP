@@ -52,6 +52,9 @@ void LivenessDetector::Detect() {
     CheckLiveness();
 
     frames_.back().Display(is_living_);
+
+    frames_.pop_front();
+
     waitKey(20);
   }
 }

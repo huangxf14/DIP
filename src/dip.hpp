@@ -2,6 +2,7 @@
 #define DIP_HPP_INCLUDE_
 
 #include <algorithm>
+#include <deque>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -59,7 +60,7 @@ private:
   void CheckLiveness();
 
   VideoCapture vc_;
-  vector<Frame> frames_;
+  deque<Frame> frames_;
   Mat display_;
   bool is_living_;
 };
