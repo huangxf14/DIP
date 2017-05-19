@@ -65,4 +65,6 @@ private:
   bool is_living_;
 };
 
+vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2);
+
 #endif

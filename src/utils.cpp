@@ -1,6 +1,6 @@
 #include "dip.hpp"
 
-vector<Point2i> match(vector<Point2i> &point1,vector<Point2i> &point2)
+vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2)
 {
 	vector<Point2i> ans;
 	for (int i=0;i<point1.size();++i)
@@ -17,5 +17,6 @@ vector<Point2i> match(vector<Point2i> &point1,vector<Point2i> &point2)
 		};
 		ans.push_back(Point2i(i,point));
 	};
+
 	return ans;
 };
