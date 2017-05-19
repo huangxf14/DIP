@@ -155,14 +155,22 @@ void Frame::CheckPalm() {
   imshow("keypoints", disp);
   INFO("FINISH");
 
-  vector<Point2i> keypoints_matched_init;
-  vector<Point2i> keypoints_matched_detect;
 
-  for (int i = 0; i != match.size(); ++i) {
-    keypoints_matched_init.push_back(keypoints_init[match[i].x]);
-    keypoints_matched_detect.push_back(keypoints_detect[match[i].y]);
+  INFO("match size");
+  INFO(match.size());
+  if (match.size() >= 3) {
+    Point2i keypoints_matched_init[3];
+    Point2i keypoints_matched_detect[3];
+    for (int i = 0; i != 3; ++i) {
+      keypoints_matched_init[i] = keypoints_init[match[i].x];
+      keypoints_matched_detect[i] = keypoints_detect[match[i].y];
+    }
+    INFO("keypoints_matched_init");
+    // INFO(keypoints_matched_init.size());
+    INFO("AFFINE START");
+    affine_mat_ = getAffineTransform(keypoints_matched_init, keypoints_matched_detect);
+    INFO("AFFINE DONE");
   }
-  // affine_mat_ = getAffineTransform(keypoints_matched_init, keypoints_matched_detect);
 }
 
 void Frame::AffineTrans() {
