@@ -21,7 +21,7 @@ Frame::Frame(const Mat &src, shared_ptr<vector<Point2i>> kpts) {
 void Frame::CheckPalm() {
   // TODO
   this->is_palm_ = false;
-
+  /*
   Point2i center = (init_keypoints_->at(0) + init_keypoints_->at(3) + init_keypoints_->at(9));
   center.x = center.x / 3;
   center.y = center.y / 3;
@@ -118,12 +118,12 @@ void Frame::CheckPalm() {
   // Draw peak valley
   if (!peaks.empty() && !valleys.empty()) {
     for (int i = 0; i != peaks.size(); ++i) {
-      // circle(disp, contour[peaks[i]], 2, Scalar(0, 0, 255), 2);
+      circle(disp, contour[peaks[i]], 2, Scalar(0, 0, 255), 2);
       putText(disp, to_string(i), contour[peaks[i]], 
         FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
     }
     for (int i = 0; i != valleys.size(); ++i) {
-      // circle(disp, contour[valleys[i]], 2, Scalar(0, 255, 0), 2);
+      circle(disp, contour[valleys[i]], 2, Scalar(0, 255, 0), 2);
       putText(disp, to_string(i), contour[valleys[i]], 
         FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
     }
@@ -132,7 +132,7 @@ void Frame::CheckPalm() {
 
   // Match keypoints
   vector<int> keypoints_match(11, -1);
-
+  */
 }
 
 void Frame::AffineTrans() {
