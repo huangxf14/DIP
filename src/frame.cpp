@@ -12,8 +12,6 @@ Frame::Frame(const Mat &src, shared_ptr<vector<Point2i>> kpts) {
   CheckPalm();
 
   if (is_palm_) {
-    //Segment();
-    //GetKeypoints();
     AffineTrans();
   } else { // not palm
     this->keypoints_ = kpts;
@@ -32,16 +30,16 @@ void Frame::CheckPalm() {
   Mat tmp;
   img_.copyTo(tmp);
 
-  int blur_range = 5;
-  double blur_sigma = 3;
+  // int blur_range = 5;
+  // double blur_sigma = 3;
 
-  GaussianBlur(tmp, tmp, Size(blur_range, blur_range), blur_sigma);
+  // GaussianBlur(tmp, tmp, Size(blur_range, blur_range), blur_sigma);
 
   // flood fill
   Scalar filling_color(255, 255, 255);
-  Scalar ld(40, 40, 40);
-  Scalar ud(40, 40, 40);
-  floodFill(tmp, center, filling_color, NULL, ld , ud, 8 | FLOODFILL_FIXED_RANGE);
+  Scalar ld(30, 30, 30);
+  Scalar ud(30, 30, 30);
+  floodFill(tmp, center, filling_color, NULL, ld , ud, 4 | FLOODFILL_FIXED_RANGE);
 
   Mat mask;
   inRange(tmp, filling_color, filling_color, mask);
@@ -61,6 +59,12 @@ void Frame::CheckPalm() {
     }
   }
 
+  Scalar mean_color = mean(img_, mask);
+  // TODO: check mean color in range
+  Scalar palm_color_lb(0, 0, 0);
+  Scalar palm_color_ub(255, 255, 255);
+  
+
   Mat disp;
   img_.copyTo(disp, mask);
   drawContours(disp, contours, max_ind, Scalar(255, 0, 0));
@@ -69,7 +73,7 @@ void Frame::CheckPalm() {
 
 
   // Calc keypoints
-  // TODO !!
+  // TODO
   Point2i root = init_keypoints_->at(0);
 
   vector<Point2i> contour = contours[max_ind];
@@ -82,16 +86,14 @@ void Frame::CheckPalm() {
 
   vector<int> peaks;
   vector<int> valleys;
-  int n = 5;  // 周围 n 个点单调升降则判定为峰/谷值
+  int n = 10;  // 周围 n 个点单调升降则判定为峰/谷值
 
-  if (contour.size() < 2 * n + 1) {
-    return;
-  }
-  for (int i = n; i != contour.size() - n; ++i) {
+  for (int i = 0; i != contour.size(); ++i) {
     if (contour[i].y < root.y) {
+      auto d = [distance](int x) {return distance[(x + distance.size()) % distance.size()]; };
       bool is_peak = true;
       for (int j = 1; j != n; ++j) {
-        if (distance[i - j] >= distance[i - j + 1] || distance[i + j] >= distance[i + j - 1]) {
+        if (d(i - j) >= d(i - j + 1) || d(i + j) >= d(i + j - 1)) {
           is_peak = false;
           break;
         }
@@ -102,7 +104,7 @@ void Frame::CheckPalm() {
 
       bool is_valley = true;
       for (int j = 1; j != n; ++j) {
-        if (distance[i - j] <= distance[i - j + 1] || distance[i + j] <= distance[i + j - 1]) {
+        if (d(i - j) <= d(i - j + 1) || d(i + j) <= d(i + j - 1)) {
           is_valley = false;
           break;
         }
@@ -116,23 +118,22 @@ void Frame::CheckPalm() {
   // Draw peak valley
   if (!peaks.empty() && !valleys.empty()) {
     for (int i = 0; i != peaks.size(); ++i) {
-      circle(disp, contour[peaks[i]], 2, Scalar(0, 0, 255), 2);
+      // circle(disp, contour[peaks[i]], 2, Scalar(0, 0, 255), 2);
+      putText(disp, to_string(i), contour[peaks[i]], 
+        FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
     }
     for (int i = 0; i != valleys.size(); ++i) {
-      circle(disp, contour[valleys[i]], 2, Scalar(0, 255, 0), 2);
+      // circle(disp, contour[valleys[i]], 2, Scalar(0, 255, 0), 2);
+      putText(disp, to_string(i), contour[valleys[i]], 
+        FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
     }
   }
   imshow("keypoints", disp);
 
-}
+  // Match keypoints
+  vector<int> keypoints_match(11, -1);
 
-//void Frame::Segment() {
-//  // TODO
-//}
-//
-//void Frame::GetKeypoints() {
-//  // TODO
-//}
+}
 
 void Frame::AffineTrans() {
   // TODO
@@ -158,15 +159,15 @@ void Frame::KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask
   int thickness = this->finger_thickness_;
 
   // palm
-  vector<Point2i> palm_boundary = {
-    keypoints->at(0),
-    keypoints->at(1),
-    keypoints->at(3),
-    keypoints->at(5),
-    keypoints->at(7),
-    keypoints->at(9),
-    keypoints->at(11)
-  };
+  vector<Point2i> palm_boundary;
+  palm_boundary.push_back(keypoints->at(0));
+  palm_boundary.push_back(keypoints->at(1));
+  palm_boundary.push_back(keypoints->at(3));
+  palm_boundary.push_back(keypoints->at(5));
+  palm_boundary.push_back(keypoints->at(7));
+  palm_boundary.push_back(keypoints->at(9));
+  palm_boundary.push_back(keypoints->at(11));
+
   for (int i = 0; i != palm_boundary.size(); ++i) {
     line(mask, palm_boundary.at(i), palm_boundary.at((i+1) % palm_boundary.size()), color, thickness);
   }
@@ -183,7 +184,6 @@ void Frame::KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask
     (keypoints->at(3).x + keypoints->at(5).x) / 2,
     (keypoints->at(3).y + keypoints->at(5).y) / 2);
   line(mask, finger2root, keypoints->at(4), color, thickness);
-
 
   // finger 3
   Point2i finger3root(
