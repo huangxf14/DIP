@@ -2,21 +2,15 @@
 #define DIP_HPP_INCLUDE_
 
 #include <algorithm>
-#include <deque>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
-
-#include <cmath>
 #include <cstdlib>
 
 #include <opencv2\opencv.hpp>
 
 using namespace std;
 using namespace cv;
-
-
 
 #define INFO(msg) {cerr << "[INFO] " << (msg) << endl;}
 #define WARNING(msg) {cerr << "[WARNING] " << (msg) << endl;}
@@ -25,28 +19,16 @@ using namespace cv;
 
 class Frame {
 public:
-  Frame(const Mat &src, shared_ptr<vector<Point2i>> kpts);
+  Frame(Mat &src);
   ~Frame() {};
 
-  void CheckPalm();
-  //void Segment();
-  //void GetKeypoints();
-  void AffineTrans();
-
+  void Boundary(bool &color_flag);
   void Display(bool is_living_, int match_stage);
-  void KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask);
-  void DrawKeypoints(const Mat &src, Mat &dst);
-
-  double finger_thickness_;
+  void MatchKeypoints(vector<Point2i> &keypoints, vector<Point2i> &match, double threshold);
 
   Mat img_;
-  Mat palm_mask_;
-  Mat palm_;  // after alignment
-  bool is_palm_;
-
-  shared_ptr<vector<Point2i>> init_keypoints_;
-  shared_ptr<vector<Point2i>> keypoints_;
-  Mat affine_mat_;
+  bool color_flag_;
+  vector<Point2i> boundary_;
 };
 
 class LivenessDetector {
@@ -56,16 +38,14 @@ public:
   
   void Detect();
 
-private:
-  void CheckLiveness();
-
   VideoCapture vc_;
-  deque<Frame> frames_;
   Mat display_;
   bool is_living_;
   int match_stage_;
 };
 
 vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2, int value = 20);
+void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask);
+void DrawKeypoints(Mat &img, vector<Point2i> &keypoints);
 
 #endif

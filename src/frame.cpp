@@ -1,30 +1,15 @@
 #include "dip.hpp"
 
-Frame::Frame(const Mat &src, shared_ptr<vector<Point2i>> kpts) {
-  // param
-  finger_thickness_ = 30;  // TODO
-
+Frame::Frame(Mat &src) {
   src.copyTo(img_);
 
-  ASSERT(!kpts->empty(), "keypoints empty!");
-  this->init_keypoints_ = kpts;
-
-  CheckPalm();
-
-  if (is_palm_) {
-    AffineTrans();
-  } else { // not palm
-    this->keypoints_ = kpts;
-  }
+  // 提取中心物体的轮廓
+  Boundary(color_flag_);
 }
 
-void Frame::CheckPalm() {
-  // TODO
-  this->is_palm_ = false;
-  
-  Point2i center = (init_keypoints_->at(0) + init_keypoints_->at(3) + init_keypoints_->at(9));
-  center.x = center.x / 3;
-  center.y = center.y / 3;
+// 提取画面中心物体的轮廓
+void Frame::Boundary(bool &color_flag) {
+  Point2i center(img_.cols / 2, img_.rows / 2);
 
   // blur
   Mat tmp;
@@ -35,21 +20,33 @@ void Frame::CheckPalm() {
 
   // GaussianBlur(tmp, tmp, Size(blur_range, blur_range), blur_sigma);
 
-  // flood fill
-  // 696 764 908
+  // 用 flooding 取出图片中心颜色相近的区域
   Scalar filling_color(255, 255, 255);
   Scalar ld(60, 60, 80);
   Scalar ud(60, 60, 80);
-  floodFill(tmp, center, filling_color, NULL, ld , ud, 4 | FLOODFILL_FIXED_RANGE);
-
+  floodFill(tmp, center, filling_color, NULL, ld, ud, 4 | FLOODFILL_FIXED_RANGE);
   Mat mask;
   inRange(tmp, filling_color, filling_color, mask);
 
-  // TODO: make it looks better
+  // 检查取出区域的颜色是否与肤色相符
+  Scalar mean_color = mean(img_, mask);
+  Scalar palm_color_lb(160, 100, 100);
+  Scalar palm_color_ub(255, 200, 200);
+
+  color_flag = true;
+  for (int c = 0; c != 3; ++c) {
+    if (mean_color[c] < palm_color_lb[c] || mean_color[c] > palm_color_ub[c]) {
+      color_flag = false;
+    }
+  }
+
+
+  // 进行形态学运算，去除一些噪声
   Mat element = getStructuringElement(MORPH_RECT, Size(10, 10));
   morphologyEx(mask, mask, MORPH_OPEN, element);
   morphologyEx(mask, mask, MORPH_CLOSE, element);
 
+  // 取出中心物体的边界
   vector<vector<Point2i>> contours;
   findContours(mask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
@@ -60,37 +57,52 @@ void Frame::CheckPalm() {
     }
   }
 
-  Scalar mean_color = mean(img_, mask);
-  // TODO: check mean color in range
-  Scalar palm_color_lb(0, 0, 0);
-  Scalar palm_color_ub(255, 255, 255);
-  
-
-  Mat disp;
-  img_.copyTo(disp, mask);
-  drawContours(disp, contours, max_ind, Scalar(255, 0, 0));
-
-  imshow("flood", disp);
+  boundary_ = contours[max_ind];
+}
 
 
-  // Calc keypoints
+void Frame::Display(bool is_living, int match_stage) {
   // TODO
-  Point2i root = init_keypoints_->at(0);
+  Mat display;
+  INFO("DRAW KEYPOINTS");
+  INFO("DISPLAY");
+  if (0) {
+    putText(display, "Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
+  } else {
+    putText(display, "Can't Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
+  }
 
-  vector<Point2i> contour = contours[max_ind];
+  if (is_living) {
+    putText(display, "Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
+  } else {
+    putText(display, "Not Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
+  }
+
+  if (0) {
+    putText(display, "Place your hand ???", Point2i(20, 90), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
+  }
+
+  imshow("display", display);
+}
+
+
+// 将标准的关键点与轮廓做匹配
+void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<Point2i>& match, double threshold) {
+  // 计算轮廓上每个点到根关键点的距离
+  Point2i root = keypoints[0];
   vector<double> distance;
-  for (int i = 0; i != contour.size(); ++i) {
-    Point2i p = contour[i];
-
+  for (int i = 0; i != boundary_.size(); ++i) {
+    Point2i p = boundary_[i];
     distance.push_back(norm(p - root));
   }
 
+  // 取出距离的峰/谷值作为关键点
   vector<int> peaks;
   vector<int> valleys;
-  int n = 10;  // 周围 n 个点单调升降则判定为峰/谷值
+  int n = 5;  // 周围 n 个点单调升降则判定为峰/谷值
 
-  for (int i = 0; i != contour.size(); ++i) {
-    if (contour[i].y < root.y) {
+  for (int i = 0; i != boundary_.size(); ++i) {
+    if (boundary_[i].y < root.y) {
       auto d = [distance](int x) {return distance[(x + distance.size()) % distance.size()]; };
       bool is_peak = true;
       for (int j = 1; j != n; ++j) {
@@ -116,152 +128,14 @@ void Frame::CheckPalm() {
     }
   }
 
-  // Draw peak valley
-  if (!peaks.empty() && !valleys.empty()) {
-    for (int i = 0; i != peaks.size(); ++i) {
-      circle(disp, contour[peaks[i]], 2, Scalar(0, 0, 255), 2);
-      putText(disp, to_string(i), contour[peaks[i]], 
-        FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-    }
-    for (int i = 0; i != valleys.size(); ++i) {
-      circle(disp, contour[valleys[i]], 2, Scalar(0, 255, 0), 2);
-      putText(disp, to_string(i), contour[valleys[i]], 
-        FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
-    }
-  }
-
-
-  // Match keypoints
-  vector<int> keypoints_match(11, -1);
-
-  vector<Point2i> keypoints_init;
+  // 将轮廓中的峰/谷值与标准的关键点做匹配
   vector<Point2i> keypoints_detect;
   for (int i = 0; i != peaks.size(); ++i) {
-    keypoints_detect.push_back(contour[peaks[i]]);
+    keypoints_detect.push_back(boundary_[peaks[i]]);
   }
   for (int i = 0; i != valleys.size(); ++i) {
-    keypoints_detect.push_back(contour[valleys[i]]);
-  }
-  for (int i = 0; i != init_keypoints_->size(); ++i) {
-    keypoints_init.push_back(init_keypoints_->at(i));
+    keypoints_detect.push_back(boundary_[valleys[i]]);
   }
 
-  vector<Point2i> match = Match(keypoints_init, keypoints_detect);
-
-  INFO("DRAW KEYPOINTS")
-  for (int i = 0; i != match.size(); ++i) {
-    line(disp, keypoints_init[match[i].x], keypoints_detect[match[i].y], Scalar(0, 255, 0), 2);
-  }
-  imshow("keypoints", disp);
-  INFO("FINISH");
-
-
-  INFO("match size");
-  INFO(match.size());
-  if (match.size() >= 3) {
-    Point2i keypoints_matched_init[3];
-    Point2i keypoints_matched_detect[3];
-    for (int i = 0; i != 3; ++i) {
-      keypoints_matched_init[i] = keypoints_init[match[i].x];
-      keypoints_matched_detect[i] = keypoints_detect[match[i].y];
-    }
-    INFO("keypoints_matched_init");
-    // INFO(keypoints_matched_init.size());
-    INFO("AFFINE START");
-    affine_mat_ = getAffineTransform(keypoints_matched_init, keypoints_matched_detect);
-    INFO("AFFINE DONE");
-  }
-}
-
-void Frame::AffineTrans() {
-  // TODO
-}
-
-void Frame::Display(bool is_living, int match_stage) {
-  // TODO
-  Mat display;
-  DrawKeypoints(img_, display);
-
-  if (is_palm_) {
-    putText(display, "Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
-  } else {
-    putText(display, "Can't Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-  }
-
-  if (is_living) {
-    putText(display, "Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
-  } else {
-    putText(display, "Not Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-  }
-
-  if (!is_palm_) {
-    putText(display, "Place your hand ???", Point2i(20, 90), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-  }
-
-  imshow("display", display);
-}
-
-void Frame::KeypointsMask(const shared_ptr<vector<Point2i>> keypoints, Mat &mask) {
-
-  mask = Mat(img_.rows, img_.cols, CV_8UC1);
-
-  Scalar color(255);
-  int thickness = this->finger_thickness_;
-
-  // palm
-  vector<Point2i> palm_boundary;
-  palm_boundary.push_back(keypoints->at(0));
-  palm_boundary.push_back(keypoints->at(1));
-  palm_boundary.push_back(keypoints->at(3));
-  palm_boundary.push_back(keypoints->at(5));
-  palm_boundary.push_back(keypoints->at(7));
-  palm_boundary.push_back(keypoints->at(9));
-  palm_boundary.push_back(keypoints->at(11));
-
-  for (int i = 0; i != palm_boundary.size(); ++i) {
-    line(mask, palm_boundary.at(i), palm_boundary.at((i+1) % palm_boundary.size()), color, thickness);
-  }
-  fillConvexPoly(mask, palm_boundary, color);
-
-  // finger 1
-  Point2i finger1root(
-    (keypoints->at(1).x + keypoints->at(3).x) / 2,
-    (keypoints->at(1).y + keypoints->at(3).y) / 2);
-  line(mask, finger1root, keypoints->at(2), color, thickness);
-
-  // finger 2
-  Point2i finger2root(
-    (keypoints->at(3).x + keypoints->at(5).x) / 2,
-    (keypoints->at(3).y + keypoints->at(5).y) / 2);
-  line(mask, finger2root, keypoints->at(4), color, thickness);
-
-  // finger 3
-  Point2i finger3root(
-    (keypoints->at(5).x + keypoints->at(7).x) / 2,
-    (keypoints->at(5).y + keypoints->at(7).y) / 2);
-  line(mask, finger3root, keypoints->at(6), color, thickness);
-
-  // finger 4
-  Point2i finger4root(
-    (keypoints->at(7).x + keypoints->at(9).x) / 2,
-    (keypoints->at(7).y + keypoints->at(9).y) / 2);
-  line(mask, finger4root, keypoints->at(8), color, thickness);
-
-  // finger 5
-  Point2i finger5root(
-    (keypoints->at(9).x + keypoints->at(11).x) / 2,
-    (keypoints->at(9).y + keypoints->at(11).y) / 2);
-  line(mask, finger5root, keypoints->at(10), color, thickness);
-
-  threshold(mask, mask, 0, 255, THRESH_BINARY);
-}
-
-void Frame::DrawKeypoints(const Mat & src, Mat & dst) {
-  ASSERT(!keypoints_->empty(), "Draw keypoints empty!");
-  src.copyTo(dst);
-
-  Mat mask;
-  KeypointsMask(keypoints_, mask);
-  dst.setTo(Scalar(0, 0, 255), mask);
-  addWeighted(src, 0.8, dst, 0.2, 0., dst);
+  match = Match(keypoints, keypoints_detect, threshold);
 }
