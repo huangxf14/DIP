@@ -9,7 +9,7 @@ Frame::Frame(Mat &src) {
 
 // 提取画面中心物体的轮廓
 void Frame::Boundary(bool &color_flag) {
-  Point2i center(img_.cols / 2, img_.rows / 2);
+  Point2i center(img_.cols / 2, img_.rows / 2 - 40);
 
   // blur
   Mat tmp;
@@ -60,34 +60,8 @@ void Frame::Boundary(bool &color_flag) {
   boundary_ = contours[max_ind];
 }
 
-
-void Frame::Display(bool is_living, int match_stage) {
-  // TODO
-  Mat display;
-  INFO("DRAW KEYPOINTS");
-  INFO("DISPLAY");
-  if (0) {
-    putText(display, "Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
-  } else {
-    putText(display, "Can't Find Palm", Point2i(20, 30), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-  }
-
-  if (is_living) {
-    putText(display, "Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 255, 0));
-  } else {
-    putText(display, "Not Living", Point2i(20, 60), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-  }
-
-  if (0) {
-    putText(display, "Place your hand ???", Point2i(20, 90), FONT_HERSHEY_SCRIPT_SIMPLEX, 1, Scalar(0, 0, 255));
-  }
-
-  imshow("display", display);
-}
-
-
 // 将标准的关键点与轮廓做匹配
-void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<Point2i>& match, double threshold) {
+void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<pair<Point2i, Point2i>>& match, double threshold) {
   // 计算轮廓上每个点到根关键点的距离
   Point2i root = keypoints[0];
   vector<double> distance;
@@ -137,5 +111,13 @@ void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<Point2i>& match, d
     keypoints_detect.push_back(boundary_[valleys[i]]);
   }
 
-  match = Match(keypoints, keypoints_detect, threshold);
+
+  vector<Point2i> keypoints_(keypoints.begin() + 2, keypoints.end() - 1);
+
+  vector<Point2i> match_ind = Match(keypoints_, keypoints_detect, threshold);
+
+  match.clear();
+  for (int i = 0; i != match_ind.size(); ++i) {
+    match.push_back(pair<Point2i, Point2i>(keypoints_[match_ind[i].x], keypoints_detect[match_ind[i].y]));
+  }
 }

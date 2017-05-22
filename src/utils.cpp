@@ -7,7 +7,7 @@ bool cmp(Point3i &x,Point3i &y)
 	return x.x<y.x;
 };
 
-vector<Point2i> Match(vector<Point2i> point1,vector<Point2i> point2,int value)
+vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,double value)
 {
 	vector<Point2i> ans;
 	vector<Point3i> graph;
@@ -47,7 +47,7 @@ void DrawKeypoints(Mat &img, vector<Point2i> &keypoints) {
 
   Mat tmp;
   img.copyTo(tmp);
-  tmp.setTo(Scalar(0, 0, 255), mask);
+  tmp.setTo(Scalar(255, 255, 255), mask);
   addWeighted(img, 0.8, tmp, 0.2, 0., img);
 }
 
@@ -104,4 +104,25 @@ void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask) {
   line(mask, finger5root, keypoints.at(10), color, thickness);
 
   threshold(mask, mask, 0, 255, THRESH_BINARY);
+}
+
+void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match) {
+  for (int i = 0; i != match.size(); ++i) {
+    circle(img, match[i].second, 2, Scalar(0, 0, 255), 2);
+    line(img, match[i].first, match[i].second, Scalar(255, 0, 0), 2);
+  }
+}
+
+void DrawInfo(Mat &img, bool is_palm, bool is_living) {
+  Scalar red(0, 0, 255), green(0, 255, 0), white(255, 255, 255);
+  if (is_living) {
+    putText(img, "Living", Point2i(20, 30), FONT_HERSHEY_SIMPLEX, 1, green, 2);
+  } else {
+    putText(img, "Not Living", Point2i(20, 30), FONT_HERSHEY_SIMPLEX, 1, white, 2);
+  }
+  if (is_palm) {
+    putText(img, "Please Move Your Finger Follow Instructions", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, green, 2);
+  } else {
+    putText(img, "Please Put Your Right Hand In Area", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, white, 2);
+  }
 }
