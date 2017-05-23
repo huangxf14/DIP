@@ -113,16 +113,17 @@ void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match) {
   }
 }
 
-void DrawInfo(Mat &img, bool is_palm, bool is_living) {
+void DrawInfo(Mat &img, bool is_palm, bool is_living, int stage) {
   Scalar red(0, 0, 255), green(0, 255, 0), white(255, 255, 255);
   if (is_living) {
-    putText(img, "Living", Point2i(20, 30), FONT_HERSHEY_SIMPLEX, 1, green, 2);
+    putText(img, "Living", Point2i(20, 30), FONT_HERSHEY_SIMPLEX, 1, red, 2);
   } else {
     putText(img, "Not Living", Point2i(20, 30), FONT_HERSHEY_SIMPLEX, 1, white, 2);
   }
   if (is_palm) {
-    putText(img, "Please Move Your Finger Follow Instructions", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, green, 2);
+    putText(img, "Move Fingers Follow Instructions", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, green, 2);
+    putText(img, string("Step: ") + to_string(stage), Point2i(20, 90), FONT_HERSHEY_SIMPLEX, 1, green, 2);
   } else {
-    putText(img, "Please Put Your Right Hand In Area", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, white, 2);
+    putText(img, "Put Right Hand In Area", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, white, 2);
   }
 }

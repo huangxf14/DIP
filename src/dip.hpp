@@ -40,6 +40,7 @@ public:
   VideoCapture vc_;
   Mat display_;
   int last_palm_time_;
+  int last_perfect_match_;
   bool is_living_;
   int match_stage_;
 };
@@ -48,6 +49,6 @@ vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2, double v
 void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask);
 void DrawKeypoints(Mat &img, vector<Point2i> &keypoints);
 void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match);
-void DrawInfo(Mat &img, bool is_palm, bool is_living);
+void DrawInfo(Mat &img, bool is_palm, bool is_living, int stage);
 
 #endif

@@ -30,8 +30,8 @@ void Frame::Boundary(bool &color_flag) {
 
   // 检查取出区域的颜色是否与肤色相符
   Scalar mean_color = mean(img_, mask);
-  Scalar palm_color_lb(160, 100, 100);
-  Scalar palm_color_ub(255, 200, 200);
+  Scalar palm_color_lb(100, 100, 100);
+  Scalar palm_color_ub(200, 200, 255);
 
   color_flag = true;
   for (int c = 0; c != 3; ++c) {
