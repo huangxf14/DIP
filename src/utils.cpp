@@ -7,6 +7,7 @@ bool cmp(Point3i &x,Point3i &y)
 	return x.x<y.x;
 };
 
+// 对模板关键点和根据轮廓取出的物体关键点进行匹配
 vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,double value)
 {
 	vector<Point2i> ans;
@@ -38,8 +39,7 @@ vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,double val
 	return ans;
 };
 
-
-
+// 根据关键点绘制手的轮廓
 void DrawKeypoints(Mat &img, vector<Point2i> &keypoints) {
 
   Mat mask;
@@ -51,6 +51,7 @@ void DrawKeypoints(Mat &img, vector<Point2i> &keypoints) {
   addWeighted(img, 0.8, tmp, 0.2, 0., img);
 }
 
+// 根据关键点取出手掌形状的 mask
 void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask) {
 
   mask = Mat(img.rows, img.cols, CV_8UC1);
@@ -106,6 +107,7 @@ void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask) {
   threshold(mask, mask, 0, 255, THRESH_BINARY);
 }
 
+// 在画面上绘制关键点匹配的结果
 void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match) {
   for (int i = 0; i != match.size(); ++i) {
     circle(img, match[i].second, 2, Scalar(0, 0, 255), 2);
@@ -113,6 +115,7 @@ void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match) {
   }
 }
 
+// 在画面上绘制提示信息
 void DrawInfo(Mat &img, bool is_palm, bool is_living, int stage) {
   Scalar red(0, 0, 255), green(0, 255, 0), white(255, 255, 255);
   if (is_living) {

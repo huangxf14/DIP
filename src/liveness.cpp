@@ -4,6 +4,8 @@ int max_stage_num = 5;
 vector<vector<Point2i>> init_keypoints;
 
 vector<Point2i> &GetStandardKeypoints(int w, int h, int stage) {
+  // 设置标准的关键点模板
+
   if (stage >= max_stage_num) {
     stage = max_stage_num - 1;
   }
@@ -105,7 +107,6 @@ void LivenessDetector::Detect() {
   last_palm_time_ = 0;
   is_living_ = false;
   while (true) {
-    // TODO
     Mat img;
     vc_ >> img;
     flip(img, img, 1);
@@ -118,6 +119,8 @@ void LivenessDetector::Detect() {
 
     vector<Point2i> keypoints = GetStandardKeypoints(w, h, match_stage_);
     vector<pair<Point2i, Point2i>> match;
+    
+    // 对每一帧提取出的轮廓，判断其轮廓上的关键点是否与模板匹配
     frame.MatchKeypoints(keypoints, match, 30);
     INFO("match num: " << match.size());
 
@@ -133,9 +136,25 @@ void LivenessDetector::Detect() {
       is_perfect_match = true;
     }
 
+
+    // 在关键点基本匹配的情况下判断几个重要的关键点是否匹配
     if (is_perfect_match && last_perfect_match_ > 10 && match_stage_ < max_stage_num) {
-      last_perfect_match_ = 0;
-      ++match_stage_;
+      bool essential_keypoint_match = true;
+      vector <Point2i> essential_keypoints;
+      vector <pair<Point2i, Point2i> > essential_match;
+      switch (match_stage_) {
+      case 1:
+      case 2:
+        essential_keypoints.push_back(keypoints[2]); break;
+      case 3:
+      case 4:
+        essential_keypoints.push_back(keypoints[4]); break;
+      }
+      frame.MatchKeypoints(essential_keypoints, essential_match, 30);
+      if (essential_match.size() == essential_keypoints.size()) {
+        last_perfect_match_ = 0;
+        ++match_stage_;  // 如果匹配成功的话则指示用户做下一个动作
+      }
     }
 
     if (match_stage_ == max_stage_num) {
@@ -151,7 +170,7 @@ void LivenessDetector::Detect() {
     DrawKeypoints(display_, keypoints);
     DrawMatch(display_, match);
     DrawInfo(display_, is_palm || last_palm_time_ < 8, is_living_, match_stage_);
-    imshow("hehe", display_);
+    imshow("display", display_);
     waitKey(20);
   }
 }

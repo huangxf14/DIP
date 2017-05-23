@@ -15,11 +15,6 @@ void Frame::Boundary(bool &color_flag) {
   Mat tmp;
   img_.copyTo(tmp);
 
-  // int blur_range = 5;
-  // double blur_sigma = 3;
-
-  // GaussianBlur(tmp, tmp, Size(blur_range, blur_range), blur_sigma);
-
   // 用 flooding 取出图片中心颜色相近的区域
   Scalar filling_color(255, 255, 255);
   Scalar ld(60, 60, 80);
