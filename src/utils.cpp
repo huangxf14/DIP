@@ -10,6 +10,11 @@ vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,double val
 {
 	vector<Point2i> ans;
 	vector<Point3i> graph;
+
+  if (point1.empty() || point2.empty()) {
+    return ans;
+  }
+
 	//int ;
 	double temp;
 	for (int i=0;i<point1.size();++i)
@@ -107,6 +112,9 @@ void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask) {
 
 // 在画面上绘制关键点匹配的结果
 void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match) {
+  if (match.empty()) {
+    return;
+  }
   for (int i = 0; i != match.size(); ++i) {
     circle(img, match[i].first, 2, Scalar(0, 255, 0), 2);
     circle(img, match[i].second, 2, Scalar(0, 0, 255), 2);
