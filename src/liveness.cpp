@@ -170,6 +170,19 @@ void LivenessDetector::Detect() {
     DrawKeypoints(display_, keypoints);
     DrawMatch(display_, match);
     DrawInfo(display_, is_palm || last_palm_time_ < 8, is_living_, match_stage_);
+
+
+    switch (match_stage_) {
+    case 1:
+      arrowedLine(display_, init_keypoints[0][2], init_keypoints[1][2], Scalar(0, 0, 255), 2); break;
+    case 2:
+      arrowedLine(display_, init_keypoints[1][2], init_keypoints[2][2], Scalar(0, 0, 255), 2); break;
+    case 3:
+      arrowedLine(display_, init_keypoints[2][4], init_keypoints[3][4], Scalar(0, 0, 255), 2); break;
+    case 4:
+      arrowedLine(display_, init_keypoints[3][4], init_keypoints[4][4], Scalar(0, 0, 255), 2); break;
+    }
+
     imshow("display", display_);
     waitKey(25);
   }
