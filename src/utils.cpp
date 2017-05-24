@@ -15,7 +15,6 @@ vector<Point2i> Match(vector<Point2i> &point1,vector<Point2i> &point2,double val
     return ans;
   }
 
-	//int ;
 	double temp;
 	for (int i=0;i<point1.size();++i)
 	{

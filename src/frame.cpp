@@ -56,12 +56,11 @@ void Frame::Boundary(bool &color_flag) {
 }
 
 // 将标准的关键点与轮廓做匹配
-void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<pair<Point2i, Point2i>>& match, double threshold) {
+void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<pair<Point2i, Point2i>>& match, double threshold, Point2i root) {
   // 计算轮廓上每个点到根关键点的距离
   if (keypoints.empty()) {
     return;
   }
-  Point2i root = keypoints[0];
   vector<double> distance;
   for (int i = 0; i != boundary_.size(); ++i) {
     Point2i p = boundary_[i];

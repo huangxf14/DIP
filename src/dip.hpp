@@ -23,7 +23,7 @@ public:
   ~Frame() {};
 
   void Boundary(bool &color_flag);
-  void MatchKeypoints(vector<Point2i> &keypoints, vector<pair<Point2i, Point2i>> &match, double threshold);
+  void MatchKeypoints(vector<Point2i> &keypoints, vector<pair<Point2i, Point2i>> &match, double threshold, Point2i root);
 
   Mat img_;
   bool color_flag_;
