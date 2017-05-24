@@ -1,6 +1,4 @@
 #include "dip.hpp"
-//#include <algorithm>
-//#include <functional>
 
 bool cmp(Point3i &x,Point3i &y)
 {
@@ -110,8 +108,9 @@ void KeypointsMask(Mat &img, vector<Point2i> &keypoints, Mat &mask) {
 // 在画面上绘制关键点匹配的结果
 void DrawMatch(Mat &img, vector<pair<Point2i, Point2i>> &match) {
   for (int i = 0; i != match.size(); ++i) {
+    circle(img, match[i].first, 2, Scalar(0, 255, 0), 2);
     circle(img, match[i].second, 2, Scalar(0, 0, 255), 2);
-    line(img, match[i].first, match[i].second, Scalar(255, 0, 0), 2);
+    line(img, match[i].first, match[i].second, Scalar(255, 0, 0), 1);
   }
 }
 

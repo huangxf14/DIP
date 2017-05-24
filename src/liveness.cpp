@@ -171,6 +171,6 @@ void LivenessDetector::Detect() {
     DrawMatch(display_, match);
     DrawInfo(display_, is_palm || last_palm_time_ < 8, is_living_, match_stage_);
     imshow("display", display_);
-    waitKey(20);
+    waitKey(25);
   }
 }
