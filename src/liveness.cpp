@@ -150,7 +150,7 @@ void LivenessDetector::Detect() {
       case 4:
         essential_keypoints.push_back(keypoints[4]); break;
       }
-      frame.MatchKeypoints(essential_keypoints, essential_match, 30);
+      frame.MatchKeypoints(essential_keypoints, essential_match, 35);
       if (essential_match.size() == essential_keypoints.size()) {
         last_perfect_match_ = 0;
         ++match_stage_;  // 如果匹配成功的话则指示用户做下一个动作
