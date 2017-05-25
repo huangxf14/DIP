@@ -8,7 +8,7 @@
 % \usepackage{float}
 \usepackage{geometry}
 % \usepackage{graphicx}
-% \usepackage{hyperref}
+\usepackage{hyperref}
 % \usepackage{listings}
 \geometry{left=2.54cm,right=2.54cm,top=2.18cm,bottom=3.18cm}
 
@@ -20,6 +20,9 @@
 
 \section{背景介绍}
 
+目前随着机器学习、模式识别领域的迅速发展，诸如人脸检测、指纹检测、掌纹检测等基于生物特征的个体识别方式正逐渐取得广泛的应用。与此同时，正如2017年央视“3·15”晚会中所提及的，针对这些特征的活体检测方法在当前越来越称为问题的核心之一。只有当识别系统具备了活体检测的能力，才能避免攻击者通过事先获取的静态信息进行直接攻击，从而大大增强识别系统的鲁棒性。
+
+具体到掌纹时变与手掌活体的检测问题中，我们需要验证检测系统中拍摄到的手掌是否为活体。关于这方面的文章目前很少，因此我们也借鉴了部分人脸活体检测、指纹活体检测中的思路。
 
 \section{系统设计}
 
@@ -32,7 +35,7 @@
     \subsection{使用流程}
 
     \subsection{模拟攻击}
-    
+
 \section{系统评价}
 
 
