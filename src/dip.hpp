@@ -32,7 +32,11 @@ public:
 
 class LivenessDetector {
 public:
-  LivenessDetector(int device_id) { vc_.open(device_id); }
+  LivenessDetector(int device_id): 
+    match_num_th1_(3), 
+    match_num_th2_(6), 
+    match_dis_th_(30)
+    { vc_.open(device_id); }
   ~LivenessDetector() { vc_.release(); }
   
   void Detect();
@@ -44,6 +48,10 @@ public:
   bool is_living_;
   int match_stage_;
   bool pop_up_flag_;
+
+  int match_num_th1_;
+  int match_num_th2_;
+  int match_dis_th_;
 };
 
 vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2, double value = 20);

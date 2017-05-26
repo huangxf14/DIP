@@ -129,7 +129,7 @@ void LivenessDetector::Detect() {
 
     // 对每一帧提取出的轮廓，判断其轮廓上的关键点是否与模板匹配
     INFO("Frame.MatchKeypoints");
-    frame.MatchKeypoints(keypoints, match, 30, keypoints[0]);
+    frame.MatchKeypoints(keypoints, match, match_dis_th_, keypoints[0]);
     INFO("Frame.MatchKeypoints end");
     INFO("match num: " << match.size());
 
@@ -137,11 +137,11 @@ void LivenessDetector::Detect() {
     ++last_perfect_match_;
     bool is_palm = false;
     bool is_perfect_match = false;
-    if (match.size() >= 3 && frame.color_flag_) {
+    if (match.size() >= match_num_th1_ && frame.color_flag_) {
       is_palm = true;
       last_palm_time_ = 0;
     }
-    if (is_palm && match.size() >= 6) {
+    if (is_palm && match.size() >= match_num_th1_) {
       is_perfect_match = true;
     }
 
