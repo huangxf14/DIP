@@ -106,6 +106,7 @@ void LivenessDetector::Detect() {
   match_stage_ = 0;
   last_palm_time_ = 0;
   is_living_ = false;
+  pop_up_flag_ = false;
   while (true) {
     Mat img;
     vc_ >> img;
@@ -116,21 +117,27 @@ void LivenessDetector::Detect() {
 
     int w = img.cols, h = img.rows;
 
+    INFO("FRAME")
+
     Frame frame(img);
+
+    INFO("STANDARD KEYPOINTS")
 
     vector<Point2i> keypoints = GetStandardKeypoints(w, h, match_stage_);
     vector<pair<Point2i, Point2i>> match;
     
 
     // 对每一帧提取出的轮廓，判断其轮廓上的关键点是否与模板匹配
+    INFO("Frame.MatchKeypoints");
     frame.MatchKeypoints(keypoints, match, 30, keypoints[0]);
+    INFO("Frame.MatchKeypoints end");
     INFO("match num: " << match.size());
 
     ++last_palm_time_;
     ++last_perfect_match_;
     bool is_palm = false;
     bool is_perfect_match = false;
-    if (match.size() >= 4 && frame.color_flag_) {
+    if (match.size() >= 3 && frame.color_flag_) {
       is_palm = true;
       last_palm_time_ = 0;
     }
@@ -151,8 +158,12 @@ void LivenessDetector::Detect() {
       case 4:
         essential_keypoints.push_back(keypoints[4]); break;
       }
-      if (essential_keypoints.size() > 1) {
-        frame.MatchKeypoints(essential_keypoints, essential_match, 35, keypoints[0]);
+      if (essential_keypoints.size() > 0 && match.size() > 0) {
+        for (int i = 0; i != match.size(); ++i) {
+          if (match[i].first == essential_keypoints[0]) {
+            essential_match.push_back(match[i]);
+          }
+        }
       }
       if (essential_match.size() == essential_keypoints.size()) {
         last_perfect_match_ = 0;
@@ -164,8 +175,9 @@ void LivenessDetector::Detect() {
       is_living_ = true;
     }
 
-    if (last_palm_time_ >= 10) {
+    if ((is_living_ && last_palm_time_ > 10) || (!is_living_ && last_palm_time_ >= 20)) {
       is_living_ = false;
+      pop_up_flag_ = false;
       match_stage_ = 0;
     }
 
@@ -186,7 +198,16 @@ void LivenessDetector::Detect() {
       arrowedLine(display_, init_keypoints[3][4], init_keypoints[4][4], Scalar(0, 0, 255), 2); break;
     }
 
-    imshow("display", display_);
-    waitKey(25);
+
+    if (is_living_ & !pop_up_flag_) {
+      pop_up_flag_ = true;
+      putText(display_, "Living", Point2i(100, 200), FONT_HERSHEY_SIMPLEX, 5, Scalar(0, 0, 255), 5);
+      putText(display_, "press any key to continue", Point2i(100, 300), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 2);
+      imshow("display", display_);
+      waitKey();
+    } else {
+      imshow("display", display_);
+      waitKey(25);
+    }
   }
 }

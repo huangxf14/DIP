@@ -45,6 +45,10 @@ void Frame::Boundary(bool &color_flag) {
   vector<vector<Point2i>> contours;
   findContours(mask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
+  vector<Point2i> tmp_;
+  tmp_.push_back(Point2i(0, 0));
+  contours.push_back(tmp_);
+
   int max_ind = 0;
   for (int i = 0; i != contours.size(); ++i) {
     if (contours[i].size() > contours[max_ind].size()) {
@@ -58,7 +62,7 @@ void Frame::Boundary(bool &color_flag) {
 // 将标准的关键点与轮廓做匹配
 void Frame::MatchKeypoints(vector<Point2i>& keypoints, vector<pair<Point2i, Point2i>>& match, double threshold, Point2i root) {
   // 计算轮廓上每个点到根关键点的距离
-  if (keypoints.empty()) {
+  if (keypoints.empty() || boundary_.empty()) {
     return;
   }
   vector<double> distance;

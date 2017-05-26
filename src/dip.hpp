@@ -43,6 +43,7 @@ public:
   int last_perfect_match_;
   bool is_living_;
   int match_stage_;
+  bool pop_up_flag_;
 };
 
 vector<Point2i> Match(vector<Point2i> &point1, vector<Point2i> &point2, double value = 20);

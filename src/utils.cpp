@@ -50,7 +50,7 @@ void DrawKeypoints(Mat &img, vector<Point2i> &keypoints) {
   Mat tmp;
   img.copyTo(tmp);
   tmp.setTo(Scalar(255, 255, 255), mask);
-  addWeighted(img, 0.8, tmp, 0.2, 0., img);
+  addWeighted(img, 0.6, tmp, 0.4, 0., img);
 }
 
 // 根据关键点取出手掌形状的 mask
@@ -131,7 +131,7 @@ void DrawInfo(Mat &img, bool is_palm, bool is_living, int stage) {
   }
   if (is_palm) {
     putText(img, "Move Fingers Follow Instructions", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, green, 2);
-    putText(img, string("Step: ") + to_string(stage), Point2i(20, 90), FONT_HERSHEY_SIMPLEX, 1, green, 2);
+    putText(img, string("Step: ") + to_string(stage) + " of 5", Point2i(20, 90), FONT_HERSHEY_SIMPLEX, 1, green, 2);
   } else {
     putText(img, "Put Right Hand In Area", Point2i(20, 60), FONT_HERSHEY_SIMPLEX, 1, white, 2);
   }
